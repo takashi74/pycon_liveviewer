@@ -1,21 +1,22 @@
 :root {
     /* PyCon JP 2025サイトのカラーパレットを参考に */
-    --main-bg-color: #f9f9f9; /* わずかにオフホワイト */
+    --main-bg-color: #f9f9f9;
     --card-bg-color: #ffffff;
     --text-color: #333333;
     --heading-color: #1a1a1a;
-    --primary-btn-bg: #E74C3C; /* 赤系 */
-    --primary-btn-hover-bg: #c0392b;
-    --secondary-btn-bg: #3498DB; /* 青系 */
-    --secondary-btn-hover-bg: #2980b9;
+    --primary-btn-bg: #E30064; /* ピンク系 */
+    --primary-btn-hover-bg: #c80058;
+    --secondary-btn-bg: #329A4D; /* 緑系 */
+    --secondary-btn-hover-bg: #2b7c40;
     --border-color: #e0e0e0;
     --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.05);
     --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.1);
-    --border-radius: 6px; /* 角の丸みは控えめに */
+    --border-radius: 6px;
 }
 
+/* 既存のCSSはそのまま */
 body {
-    font-family: 'IBM Plex Sans JP', sans-serif; /* PyCon JPサイトに近いフォント */
+    font-family: 'IBM Plex Sans JP', sans-serif;
     background-color: var(--main-bg-color);
     margin: 0;
     padding: 30px 20px;
@@ -25,28 +26,24 @@ body {
     flex-direction: column;
     min-height: 100vh;
 }
-
 .main-header {
     text-align: center;
     margin-bottom: 50px;
     padding-bottom: 20px;
     border-bottom: 1px solid var(--border-color);
 }
-
 .page-title {
     font-size: 2.8rem;
     font-weight: 700;
     color: var(--heading-color);
     margin-bottom: 25px;
-    letter-spacing: -0.02em; /* PyCon JPサイトのタイトルに似た引き締まった印象 */
+    letter-spacing: -0.02em;
 }
-
 .header-actions {
     display: flex;
     justify-content: center;
     gap: 25px;
 }
-
 .btn {
     padding: 14px 28px;
     font-size: 1.1rem;
@@ -59,37 +56,31 @@ body {
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
     box-shadow: var(--shadow-light);
 }
-
 .btn-primary {
     background-color: var(--primary-btn-bg);
 }
-
 .btn-primary:hover {
     background-color: var(--primary-btn-hover-bg);
     transform: translateY(-2px);
     box-shadow: var(--shadow-medium);
 }
-
 .btn-secondary {
     background-color: var(--secondary-btn-bg);
 }
-
 .btn-secondary:hover {
     background-color: var(--secondary-btn-hover-bg);
     transform: translateY(-2px);
     box-shadow: var(--shadow-medium);
 }
-
 .player-grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); /* 画面幅に応じて調整 */
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
     gap: 30px;
-    max-width: 1280px; /* PyCon JPサイトのコンテンツ幅を意識 */
-    margin: 0 auto; /* 中央寄せ */
-    flex-grow: 1; /* 残りのスペースを埋める */
+    max-width: 1280px;
+    margin: 0 auto;
+    flex-grow: 1;
     padding: 20px 0;
 }
-
 .player-container {
     background-color: var(--card-bg-color);
     padding: 25px;
@@ -100,23 +91,19 @@ body {
     flex-direction: column;
     gap: 15px;
 }
-
 .track-title {
     margin: 0;
     font-size: 1.5rem;
     font-weight: 500;
     color: var(--heading-color);
 }
-
 video {
     width: 100%;
     height: auto;
-    min-height: 250px; /* ある程度の高さを確保 */
+    min-height: 250px;
     border-radius: var(--border-radius);
     background-color: #000;
 }
-
-/* レスポンシブデザインの調整 */
 @media (max-width: 768px) {
     .main-header {
         margin-bottom: 30px;
@@ -130,11 +117,11 @@ video {
         gap: 15px;
     }
     .btn {
-        width: 80%; /* ボタンを縦に並べ、幅を広げる */
+        width: 80%;
         margin: 0 auto;
     }
     .player-grid-container {
-        grid-template-columns: 1fr; /* 1列表示 */
+        grid-template-columns: 1fr;
         gap: 25px;
         padding: 10px 0;
     }

@@ -3,12 +3,11 @@ function initializeHlsPlayer(videoId) {
     const video = document.getElementById(videoId);
     if (Hls.isSupported()) {
         const hls = new Hls();
-        // ここにHLSストリームのURLをセットします
-        // 現状は何も再生しないので、コメントアウトまたは空にしています。
+        // HLSストリームのURLをセットしないことで、再生を停止状態にします。
         // hls.loadSource('YOUR_STREAM_URL_HERE');
         hls.attachMedia(video);
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = 'YOUR_STREAM_URL_HERE';
+        video.src = ''; // ソースを空に設定
     }
 }
 
