@@ -1,4 +1,5 @@
 :root {
+    /* PyCon JP 2025サイトのカラーパレットを参考に */
     --main-bg-color: #f9f9f9;
     --card-bg-color: #ffffff;
     --text-color: #333333;
@@ -26,44 +27,17 @@ body {
 }
 
 .main-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 50px;
+    text-align: center;
     margin-bottom: 50px;
+    padding-bottom: 20px;
     border-bottom: 1px solid var(--border-color);
-}
-
-.header-left, .header-center, .header-right {
-    display: flex;
-    align-items: center;
-}
-
-.header-left {
-    flex-grow: 1;
-}
-
-.header-center {
-    flex-grow: 1;
-    justify-content: center;
-}
-
-.header-right {
-    flex-grow: 1;
-    justify-content: flex-end;
-    gap: 25px;
-}
-
-.header-logo {
-    height: 50px;
-    width: auto;
 }
 
 .page-title {
     font-size: 2.8rem;
     font-weight: 700;
     color: var(--heading-color);
-    margin: 0;
+    margin-bottom: 25px;
     letter-spacing: -0.02em;
 }
 
@@ -142,20 +116,17 @@ video {
     background-color: #000;
 }
 
+/* 再生ボタンとローディングスピナーを非表示にする */
 .video-js .vjs-big-play-button,
 .video-js.vjs-waiting .vjs-loading-spinner {
     display: none !important;
 }
 
-@media (max-width: 1024px) {
-    .main-header {
-        flex-direction: column;
-        gap: 20px;
-        padding: 20px;
-        text-align: center;
-    }
-}
+/* レスポンシブデザインの調整 */
 @media (max-width: 768px) {
+    .main-header {
+        margin-bottom: 30px;
+    }
     .page-title {
         font-size: 2rem;
         margin-bottom: 15px;

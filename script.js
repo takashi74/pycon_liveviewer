@@ -1,11 +1,20 @@
+// Pretixから提供された認証情報
+const CLIENT_ID = "IXn9dPLFKNAsw8cmggJ2fwJzcypkbHAXVIlg32ZC";
+const REDIRECT_URI = "https://auth.streamtech.cloud/callback";
+
 // 「視聴権利の取得」ボタンのイベントリスナー
 document.getElementById('get-rights-btn').addEventListener('click', () => {
-    // ユーザーをあなたの認証サーバーにリダイレクトします。
-    const authServerUrl = "https://auth.streamtech.cloud/authorize";
-    window.location.href = authServerUrl;
+    // ユーザーをPretixの認可エンドポイントにリダイレクト
+    const pretixAuthorizeUrl = new URL('https://pretix.streamtech.cloud/pyconjp/oauth2/v1/authorize');
+    pretixAuthorizeUrl.searchParams.set('client_id', CLIENT_ID);
+    pretixAuthorizeUrl.searchParams.set('response_type', 'code');
+    pretixAuthorizeUrl.searchParams.set('scope', 'openid profile email');
+    pretixAuthorizeUrl.searchParams.set('redirect_uri', REDIRECT_URI);
+
+    window.location.href = pretixAuthorizeUrl.toString();
 });
 
-// URLパラメータを取得
+// URLから認証コードを取得し、動画を再生
 const urlParams = new URLSearchParams(window.location.search);
 const authCode = urlParams.get('code');
 
