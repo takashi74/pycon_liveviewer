@@ -4,17 +4,16 @@
     --card-bg-color: #ffffff;
     --text-color: #333333;
     --heading-color: #1a1a1a;
-    --primary-btn-bg: #E30064; /* ピンク系 */
-    --primary-btn-hover-bg: #c80058;
-    --secondary-btn-bg: #329A4D; /* 緑系 */
-    --secondary-btn-hover-bg: #2b7c40;
+    --primary-btn-bg: #ff9da5; /* ご指定のピンク */
+    --primary-btn-hover-bg: #e68a91; /* ホバー用 */
+    --secondary-btn-bg: #24a53d; /* ご指定の緑 */
+    --secondary-btn-hover-bg: #1e8430; /* ホバー用 */
     --border-color: #e0e0e0;
     --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.05);
     --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.1);
     --border-radius: 6px;
 }
 
-/* 既存のCSSはそのまま */
 body {
     font-family: 'IBM Plex Sans JP', sans-serif;
     background-color: var(--main-bg-color);
@@ -26,12 +25,14 @@ body {
     flex-direction: column;
     min-height: 100vh;
 }
+
 .main-header {
     text-align: center;
     margin-bottom: 50px;
     padding-bottom: 20px;
     border-bottom: 1px solid var(--border-color);
 }
+
 .page-title {
     font-size: 2.8rem;
     font-weight: 700;
@@ -39,11 +40,13 @@ body {
     margin-bottom: 25px;
     letter-spacing: -0.02em;
 }
+
 .header-actions {
     display: flex;
     justify-content: center;
     gap: 25px;
 }
+
 .btn {
     padding: 14px 28px;
     font-size: 1.1rem;
@@ -56,22 +59,27 @@ body {
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
     box-shadow: var(--shadow-light);
 }
+
 .btn-primary {
     background-color: var(--primary-btn-bg);
 }
+
 .btn-primary:hover {
     background-color: var(--primary-btn-hover-bg);
     transform: translateY(-2px);
     box-shadow: var(--shadow-medium);
 }
+
 .btn-secondary {
     background-color: var(--secondary-btn-bg);
 }
+
 .btn-secondary:hover {
     background-color: var(--secondary-btn-hover-bg);
     transform: translateY(-2px);
     box-shadow: var(--shadow-medium);
 }
+
 .player-grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
@@ -81,6 +89,7 @@ body {
     flex-grow: 1;
     padding: 20px 0;
 }
+
 .player-container {
     background-color: var(--card-bg-color);
     padding: 25px;
@@ -91,12 +100,14 @@ body {
     flex-direction: column;
     gap: 15px;
 }
+
 .track-title {
     margin: 0;
     font-size: 1.5rem;
     font-weight: 500;
     color: var(--heading-color);
 }
+
 video {
     width: 100%;
     height: auto;
@@ -104,6 +115,14 @@ video {
     border-radius: var(--border-radius);
     background-color: #000;
 }
+
+/* 再生ボタンとローディングスピナーを非表示にする */
+.video-js .vjs-big-play-button,
+.video-js.vjs-waiting .vjs-loading-spinner {
+    display: none !important;
+}
+
+/* レスポンシブデザインの調整 */
 @media (max-width: 768px) {
     .main-header {
         margin-bottom: 30px;
