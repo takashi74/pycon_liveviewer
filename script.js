@@ -1,5 +1,5 @@
 // Pretixから提供された認証情報
-const CLIENT_ID = "IXn9dPLFKNAsw8cmggJ2fwJzcypkbHAXVIlg32ZC";
+const CLIENT_ID = "i0VwMUzGedRaeEq1OVFZ7ez9XGnKeptlTOEK5Nlr";
 const REDIRECT_URI = "https://auth.streamtech.cloud/callback";
 
 // 「視聴権利の獲得」ボタンのイベントリスナー
