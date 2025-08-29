@@ -1,5 +1,4 @@
 :root {
-    /* PyCon JP 2025サイトのカラーパレットを参考に */
     --main-bg-color: #f9f9f9;
     --card-bg-color: #ffffff;
     --text-color: #333333;
@@ -116,13 +115,11 @@ video {
     background-color: #000;
 }
 
-/* 再生ボタンとローディングスピナーを非表示にする */
 .video-js .vjs-big-play-button,
 .video-js.vjs-waiting .vjs-loading-spinner {
     display: none !important;
 }
 
-/* レスポンシブデザインの調整 */
 @media (max-width: 768px) {
     .main-header {
         margin-bottom: 30px;
