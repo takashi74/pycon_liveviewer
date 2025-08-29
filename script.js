@@ -5,7 +5,7 @@ const REDIRECT_URI = "https://auth.streamtech.cloud/callback";
 // 「視聴権利の獲得」ボタンのイベントリスナー
 document.getElementById('get-rights-btn').addEventListener('click', () => {
     // ユーザーをPretixの認可エンドポイントにリダイレクト
-    const pretixAuthorizeUrl = new URL('https://pretix.streamtech.cloud/pyconjp/oauth2/v1/authorize');
+    const pretixAuthorizeUrl = new URL('https://pretix.eu/pyconjp/oauth2/v1/authorize');
     pretixAuthorizeUrl.searchParams.set('client_id', CLIENT_ID);
     pretixAuthorizeUrl.searchParams.set('response_type', 'code');
     pretixAuthorizeUrl.searchParams.set('scope', 'openid profile email');
