@@ -90,7 +90,7 @@ function createTrack(trackId, title) {
             btn.disabled = true;
             btn.textContent = '再生準備中...';
 
-            let sessionUrl = `https://auth.streamtech.cloud/session?token=${token}&stream_id=${streamId}`;
+            let sessionUrl = `https://auth.streamtech.cloud/session?token=${token}&stream_id=${trackId}`;
             if (is_debug) {
                 sessionUrl += "&is_debug=1";
             }
