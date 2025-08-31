@@ -141,8 +141,14 @@ window.onload = () => {
             getRightsBtn.style.display = 'none';
 
             tracks.forEach(track => {
-                const btn = document.querySelector(`#${track.id} + button`);
-                if (btn) btn.disabled = false;
+                const video = document.getElementById(track.id);
+                if (!video) return;
+
+                // video の次の button を取得
+                const btn = video.nextElementSibling;
+                if (btn && btn.tagName.toLowerCase() === 'button') {
+                    btn.disabled = false;
+                }
             });
         }
     }
