@@ -95,9 +95,15 @@ body {
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-medium);
     text-align: center;
+    position: relative;
+}
+
+.custom-controls {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
     display: flex;
-    flex-direction: column;
-    gap: 15px;
+    gap: 10px;
 }
 
 .track-title {
