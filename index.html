@@ -11,34 +11,102 @@
 </head>
 <body>
 
-    <header class="main-header">
-        <h1 class="page-title">PyCon JP 2025 Live</h1>
-        <div class="header-actions">
-            <a href="https://pretix.eu/pyconjp/2025/" class="btn btn-primary" target="_blank">視聴チケット購入</a>
-            <button id="get-rights-btn" class="btn btn-secondary">視聴権利の取得</button>
-        </div>
-    </header>
+<header class="main-header">
+    <h1 class="page-title">PyCon JP 2025 Live</h1>
+    <div class="header-actions">
+        <a href="https://pretix.eu/pyconjp/2025/" class="btn btn-primary" target="_blank">視聴チケット購入</a>
+        <button id="get-rights-btn" class="btn btn-secondary">視聴権利の取得</button>
+    </div>
+</header>
 
-    <main class="player-grid-container">
-        <div class="player-container">
-            <h3 class="track-title">Track 1</h3>
-            <video id="video1" class="video-js vjs-default-skin" controls poster="poster.png"></video>
-        </div>
-        <div class="player-container">
-            <h3 class="track-title">Track 2</h3>
-            <video id="video2" class="video-js vjs-default-skin" controls poster="poster.png"></video>
-        </div>
-        <div class="player-container">
-            <h3 class="track-title">Track 3</h3>
-            <video id="video3" class="video-js vjs-default-skin" controls poster="poster.png"></video>
-        </div>
-        <div class="player-container">
-            <h3 class="track-title">Track 4</h3>
-            <video id="video4" class="video-js vjs-default-skin" controls poster="poster.png"></video>
-        </div>
-    </main>
+<main class="player-grid-container">
+    <div class="player-container" data-stream-id="d65dac2d-b1fa-44f5-9d25-2c7271862104">
+        <h3 class="track-title">Track 1</h3>
+        <video id="video1" class="video-js vjs-default-skin" controls poster="poster.png"></video>
+        <button class="play-btn">再生</button>
+    </div>
+    <div class="player-container" data-stream-id="e5284a46-0808-4329-a4ab-685e0d2db588">
+        <h3 class="track-title">Track 2</h3>
+        <video id="video2" class="video-js vjs-default-skin" controls poster="poster.png"></video>
+        <button class="play-btn">再生</button>
+    </div>
+    <div class="player-container" data-stream-id="f17e2dca-3e56-4d71-99f6-7ba976311b69">
+        <h3 class="track-title">Track 3</h3>
+        <video id="video3" class="video-js vjs-default-skin" controls poster="poster.png"></video>
+        <button class="play-btn">再生</button>
+    </div>
+    <div class="player-container" data-stream-id="072eed0b-8397-4b07-a202-510bc4d6097">
+        <h3 class="track-title">Track 4</h3>
+        <video id="video4" class="video-js vjs-default-skin" controls poster="poster.png"></video>
+        <button class="play-btn">再生</button>
+    </div>
+</main>
 
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
-    <script src="script.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+<script>
+window.onload = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    function decodeJwt(token) {
+        try {
+            return JSON.parse(atob(token.split('.')[1]));
+        } catch (e) {
+            console.error("JWTデコード失敗", e);
+            return null;
+        }
+    }
+
+    function setVideoSource(videoEl, url) {
+        if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(url);
+            hls.attachMedia(videoEl);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => videoEl.controls = true);
+        } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+            videoEl.src = url;
+            videoEl.addEventListener('loadedmetadata', () => videoEl.controls = true);
+        }
+    }
+
+    const payload = token ? decodeJwt(token) : null;
+    const registeredTracks = payload?.jstream_registered_tracks || {};
+
+    document.querySelectorAll('.player-container').forEach(container => {
+        const btn = container.querySelector('.play-btn');
+        const video = container.querySelector('video');
+        const streamId = container.dataset.streamId;
+
+        if (!registeredTracks[streamId]) {
+            btn.disabled = true;
+            btn.style.opacity = 0.5;
+            return;
+        }
+
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            btn.textContent = "準備中...";
+
+            try {
+                const res = await fetch(`/session?token=${encodeURIComponent(token)}&stream_id=${encodeURIComponent(streamId)}`);
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || "Session取得失敗");
+                }
+
+                const data = await res.json();
+                setVideoSource(video, data.playback_url);
+                btn.textContent = "再生中";
+
+            } catch (e) {
+                console.error("Session取得エラー:", e);
+                alert("ストリーム再生に失敗しました。");
+                btn.disabled = false;
+                btn.textContent = "再生";
+            }
+        });
+    });
+};
+</script>
 </body>
 </html>
