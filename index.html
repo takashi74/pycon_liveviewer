@@ -25,12 +25,16 @@
 </main>
 
 <script>
-// URLからトークン取得
+const CLIENT_ID = "i0VwMUzGedRaeEq1OVFZ7ez9XGnKeptlTOEK5Nlr";
+const REDIRECT_URI = "https://auth.streamtech.cloud/callback";
+
+// URLからトークンを取得
 const urlParams = new URLSearchParams(window.location.search);
 const token = urlParams.get('token');
 
-// JWTデコード
+// JWTデコード（安全化）
 function decodeJwt(token) {
+    if (!token) return null;
     try {
         const payloadBase64 = token.split('.')[1];
         const payload = JSON.parse(atob(payloadBase64));
@@ -41,13 +45,15 @@ function decodeJwt(token) {
     }
 }
 
-// 動画再生
+// 動画再生セット
 function setVideoSource(video, url) {
     if (Hls.isSupported()) {
         const hls = new Hls();
         hls.loadSource(url);
         hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => video.controls = true);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            video.controls = true;
+        });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
         video.addEventListener('loadedmetadata', () => video.controls = true);
@@ -56,7 +62,7 @@ function setVideoSource(video, url) {
     }
 }
 
-// トラック生成
+// トラックごとのプレイヤー生成
 function createTrack(trackId, title, streamUUID) {
     const container = document.createElement('div');
     container.className = 'player-container';
@@ -72,7 +78,7 @@ function createTrack(trackId, title, streamUUID) {
     
     const btn = document.createElement('button');
     btn.textContent = '再生';
-    btn.disabled = !streamUUID; // UUIDがなければ無効
+    btn.disabled = true; // 初期は無効化
     btn.addEventListener('click', async () => {
         if (!token) return alert("トークンがありません");
         try {
@@ -103,24 +109,39 @@ function createTrack(trackId, title, streamUUID) {
 
 // ページ初期化
 window.onload = () => {
+    const payload = decodeJwt(token);
     const getRightsBtn = document.getElementById('get-rights-btn');
     const purchaseBtn = document.getElementById('purchase-btn');
 
-    const payload = decodeJwt(token);
-    const jstreamTracks = payload?.jstream_registered_tracks || {};
+    // トークンなし、またはデコード失敗時
+    if (!payload) {
+        console.warn("トークンが存在しないか不正です。");
+        getRightsBtn.style.display = "inline-block";
+        purchaseBtn.style.pointerEvents = 'auto';
+        return;
+    }
 
-    // トラック情報（UI表示用ID）
-    const tracks = Object.keys(jstreamTracks).map((uuid, idx) => ({
+    const jstreamTracks = payload.jstream_registered_tracks || {};
+    const tracks = Object.entries(jstreamTracks).map(([uuid, _], idx) => ({
         trackId: `track${idx+1}`,
         streamUUID: uuid
     }));
 
     tracks.forEach(t => createTrack(t.trackId, t.trackId, t.streamUUID));
 
+    if (payload.has_ticket) {
+        purchaseBtn.style.pointerEvents = 'none';
+        purchaseBtn.style.opacity = 0.5;
+        getRightsBtn.style.display = 'none';
+        // 再生ボタンを有効化
+        tracks.forEach(t => {
+            const btn = document.querySelector(`#${t.trackId} + button`);
+            if (btn) btn.disabled = false;
+        });
+    }
+
     getRightsBtn.addEventListener('click', () => {
         if (!token) {
-            const CLIENT_ID = "i0VwMUzGedRaeEq1OVFZ7ez9XGnKeptlTOEK5Nlr";
-            const REDIRECT_URI = "https://auth.streamtech.cloud/callback";
             const url = new URL('https://pretix.eu/pyconjp/oauth2/v1/authorize');
             url.searchParams.set('client_id', CLIENT_ID);
             url.searchParams.set('response_type', 'code');
@@ -129,12 +150,6 @@ window.onload = () => {
             window.location.href = url.toString();
         }
     });
-
-    if (payload?.has_ticket) {
-        purchaseBtn.style.pointerEvents = 'none';
-        purchaseBtn.style.opacity = 0.5;
-        getRightsBtn.style.display = 'none';
-    }
 };
 </script>
 
