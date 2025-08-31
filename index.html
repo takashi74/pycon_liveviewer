@@ -25,14 +25,11 @@
 </main>
 
 <script>
-const CLIENT_ID = "i0VwMUzGedRaeEq1OVFZ7ez9XGnKeptlTOEK5Nlr";
-const REDIRECT_URI = "https://auth.streamtech.cloud/callback";
-
-// URLからトークンを取得
+// URLからトークン取得
 const urlParams = new URLSearchParams(window.location.search);
 const token = urlParams.get('token');
 
-// JWTペイロードデコード
+// JWTデコード
 function decodeJwt(token) {
     try {
         const payloadBase64 = token.split('.')[1];
@@ -44,15 +41,13 @@ function decodeJwt(token) {
     }
 }
 
-// 動画再生セット
+// 動画再生
 function setVideoSource(video, url) {
     if (Hls.isSupported()) {
         const hls = new Hls();
         hls.loadSource(url);
         hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            video.controls = true;
-        });
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.controls = true);
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
         video.addEventListener('loadedmetadata', () => video.controls = true);
@@ -61,8 +56,8 @@ function setVideoSource(video, url) {
     }
 }
 
-// トラックごとのプレイヤー生成
-function createTrack(trackId, title) {
+// トラック生成
+function createTrack(trackId, title, streamUUID) {
     const container = document.createElement('div');
     container.className = 'player-container';
     
@@ -77,21 +72,20 @@ function createTrack(trackId, title) {
     
     const btn = document.createElement('button');
     btn.textContent = '再生';
-    btn.disabled = true; // 初期は無効化
+    btn.disabled = !streamUUID; // UUIDがなければ無効
     btn.addEventListener('click', async () => {
         if (!token) return alert("トークンがありません");
         try {
             btn.disabled = true;
             btn.textContent = '再生準備中...';
-
-            // FastAPI /session エンドポイントにGETでアクセス
-            const url = `https://auth.streamtech.cloud/session?token=${encodeURIComponent(token)}&stream_id=${encodeURIComponent(trackId)}`;
-            const response = await fetch(url, { method: 'GET' });
-
-            if (!response.ok) throw new Error(`ストリーム取得失敗: ${response.status}`);
+            const response = await fetch('https://auth.streamtech.cloud/get-stream-url', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ token, stream_id: streamUUID })
+            });
+            if (!response.ok) throw new Error('ストリーム取得失敗');
             const data = await response.json();
             setVideoSource(video, data.playback_url);
-
             btn.textContent = '再生中';
         } catch (e) {
             console.error("ストリーム取得エラー", e);
@@ -112,14 +106,21 @@ window.onload = () => {
     const getRightsBtn = document.getElementById('get-rights-btn');
     const purchaseBtn = document.getElementById('purchase-btn');
 
-    // トラック情報（サーバーAPIから取得可能にする場合はここを書き換え）
-    const tracks = ['track1', 'track2', 'track3', 'track4'];
-    tracks.forEach(t => createTrack(t, t));
+    const payload = decodeJwt(token);
+    const jstreamTracks = payload?.jstream_registered_tracks || {};
 
-    // 視聴権利取得ボタン
+    // トラック情報（UI表示用ID）
+    const tracks = Object.keys(jstreamTracks).map((uuid, idx) => ({
+        trackId: `track${idx+1}`,
+        streamUUID: uuid
+    }));
+
+    tracks.forEach(t => createTrack(t.trackId, t.trackId, t.streamUUID));
+
     getRightsBtn.addEventListener('click', () => {
         if (!token) {
-            // Pretix OAuth2認証
+            const CLIENT_ID = "i0VwMUzGedRaeEq1OVFZ7ez9XGnKeptlTOEK5Nlr";
+            const REDIRECT_URI = "https://auth.streamtech.cloud/callback";
             const url = new URL('https://pretix.eu/pyconjp/oauth2/v1/authorize');
             url.searchParams.set('client_id', CLIENT_ID);
             url.searchParams.set('response_type', 'code');
@@ -129,18 +130,10 @@ window.onload = () => {
         }
     });
 
-    // tokenがあれば再生可能なトラックを有効化
-    if (token) {
-        const payload = decodeJwt(token);
-        if (payload && payload.has_ticket) {
-            purchaseBtn.style.pointerEvents = 'none';
-            purchaseBtn.style.opacity = 0.5;
-            tracks.forEach(trackId => {
-                const btn = document.querySelector(`#${trackId} + button`);
-                if (btn) btn.disabled = false;
-            });
-            getRightsBtn.style.display = 'none';
-        }
+    if (payload?.has_ticket) {
+        purchaseBtn.style.pointerEvents = 'none';
+        purchaseBtn.style.opacity = 0.5;
+        getRightsBtn.style.display = 'none';
     }
 };
 </script>
