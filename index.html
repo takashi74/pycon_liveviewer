@@ -21,7 +21,7 @@
 </header>
 
 <main class="player-grid-container">
-    <!-- トラックはここに動的生成 -->
+    <!-- プレイヤーはここに動的生成 -->
 </main>
 
 <script>
@@ -32,7 +32,7 @@ const REDIRECT_URI = "https://auth.streamtech.cloud/callback";
 const urlParams = new URLSearchParams(window.location.search);
 const token = urlParams.get('token');
 
-// JWTデコード（安全化）
+// JWTデコード（安全版）
 function decodeJwt(token) {
     if (!token) return null;
     try {
@@ -45,15 +45,13 @@ function decodeJwt(token) {
     }
 }
 
-// 動画再生セット
+// HLS再生セット
 function setVideoSource(video, url) {
     if (Hls.isSupported()) {
         const hls = new Hls();
         hls.loadSource(url);
         hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            video.controls = true;
-        });
+        hls.on(Hls.Events.MANIFEST_PARSED, () => { video.controls = true; });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
         video.addEventListener('loadedmetadata', () => video.controls = true);
@@ -62,32 +60,34 @@ function setVideoSource(video, url) {
     }
 }
 
-// トラックごとのプレイヤー生成
-function createTrack(trackId, title, streamUUID) {
+// トラックプレイヤー生成
+function createTrack(trackName, streamId = null) {
     const container = document.createElement('div');
     container.className = 'player-container';
-    
+
     const h3 = document.createElement('h3');
     h3.className = 'track-title';
-    h3.textContent = title;
-    
+    h3.textContent = trackName;
+
     const video = document.createElement('video');
-    video.id = trackId;
+    video.id = trackName;
     video.poster = 'poster.png';
     video.controls = false;
-    
+
     const btn = document.createElement('button');
     btn.textContent = '再生';
     btn.disabled = true; // 初期は無効化
+
     btn.addEventListener('click', async () => {
         if (!token) return alert("トークンがありません");
+        if (!streamId) return alert("ストリームIDがありません");
         try {
             btn.disabled = true;
             btn.textContent = '再生準備中...';
             const response = await fetch('https://auth.streamtech.cloud/get-stream-url', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ token, stream_id: streamUUID })
+                body: JSON.stringify({ token, stream_id: streamId })
             });
             if (!response.ok) throw new Error('ストリーム取得失敗');
             const data = await response.json();
@@ -105,6 +105,7 @@ function createTrack(trackId, title, streamUUID) {
     container.appendChild(video);
     container.appendChild(btn);
     document.querySelector('.player-grid-container').appendChild(container);
+    return btn;
 }
 
 // ページ初期化
@@ -113,42 +114,33 @@ window.onload = () => {
     const getRightsBtn = document.getElementById('get-rights-btn');
     const purchaseBtn = document.getElementById('purchase-btn');
 
-    // トークンなし、またはデコード失敗時
-    if (!payload) {
-        console.warn("トークンが存在しないか不正です。");
-        getRightsBtn.style.display = "inline-block";
-        purchaseBtn.style.pointerEvents = 'auto';
-        return;
-    }
+    // トラック情報（固定4トラック）
+    const trackList = ['track1','track2','track3','track4'];
+    const buttons = [];
 
-    const jstreamTracks = payload.jstream_registered_tracks || {};
-    const tracks = Object.entries(jstreamTracks).map(([uuid, _], idx) => ({
-        trackId: `track${idx+1}`,
-        streamUUID: uuid
-    }));
+    trackList.forEach((trackName, idx) => {
+        const streamId = payload?.jstream_registered_tracks
+            ? Object.keys(payload.jstream_registered_tracks)[idx]
+            : null;
+        buttons.push(createTrack(trackName, streamId));
+    });
 
-    tracks.forEach(t => createTrack(t.trackId, t.trackId, t.streamUUID));
-
-    if (payload.has_ticket) {
+    // tokenがあれば再生可能
+    if (payload && payload.has_ticket) {
         purchaseBtn.style.pointerEvents = 'none';
         purchaseBtn.style.opacity = 0.5;
         getRightsBtn.style.display = 'none';
-        // 再生ボタンを有効化
-        tracks.forEach(t => {
-            const btn = document.querySelector(`#${t.trackId} + button`);
-            if (btn) btn.disabled = false;
-        });
+        buttons.forEach(btn => btn.disabled = false);
     }
 
+    // 視聴権利取得ボタン
     getRightsBtn.addEventListener('click', () => {
-        if (!token) {
-            const url = new URL('https://pretix.eu/pyconjp/oauth2/v1/authorize');
-            url.searchParams.set('client_id', CLIENT_ID);
-            url.searchParams.set('response_type', 'code');
-            url.searchParams.set('scope', 'openid profile email');
-            url.searchParams.set('redirect_uri', REDIRECT_URI);
-            window.location.href = url.toString();
-        }
+        const url = new URL('https://pretix.eu/pyconjp/oauth2/v1/authorize');
+        url.searchParams.set('client_id', CLIENT_ID);
+        url.searchParams.set('response_type', 'code');
+        url.searchParams.set('scope', 'openid profile email');
+        url.searchParams.set('redirect_uri', REDIRECT_URI);
+        window.location.href = url.toString();
     });
 };
 </script>
