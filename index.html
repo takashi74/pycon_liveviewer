@@ -4,7 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PyCon JP 2025 Live</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.2.6/shaka-player.compiled.js"></script>
 <style>
 :root {
     --main-bg-color: #f9f9f9;
@@ -16,29 +20,27 @@
     --secondary-btn-bg: #24a53d;
     --secondary-btn-hover-bg: #1e8430;
     --border-color: #e0e0e0;
-    --shadow-light: 0 2px 8px rgba(0,0,0,0.05);
-    --shadow-medium: 0 4px 12px rgba(0,0,0,0.1);
+    --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.05);
+    --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.1);
     --border-radius: 6px;
 }
-
 body {
     font-family: 'IBM Plex Sans JP', sans-serif;
     background-color: var(--main-bg-color);
     margin: 0;
     padding: 30px 20px;
     color: var(--text-color);
+    line-height: 1.6;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
 }
-
 .main-header {
     text-align: center;
     margin-bottom: 50px;
     padding-bottom: 20px;
     border-bottom: 1px solid var(--border-color);
 }
-
 .page-title {
     font-size: 2.8rem;
     font-weight: 700;
@@ -46,13 +48,11 @@ body {
     margin-bottom: 25px;
     letter-spacing: -0.02em;
 }
-
 .header-actions {
     display: flex;
     justify-content: center;
     gap: 25px;
 }
-
 .btn {
     padding: 14px 28px;
     font-size: 1.1rem;
@@ -65,22 +65,19 @@ body {
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
     box-shadow: var(--shadow-light);
 }
-
 .btn-primary { background-color: var(--primary-btn-bg); }
 .btn-primary:hover { background-color: var(--primary-btn-hover-bg); transform: translateY(-2px); box-shadow: var(--shadow-medium); }
 .btn-secondary { background-color: var(--secondary-btn-bg); }
 .btn-secondary:hover { background-color: var(--secondary-btn-hover-bg); transform: translateY(-2px); box-shadow: var(--shadow-medium); }
-
 .player-grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(450px,1fr));
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
     gap: 30px;
     max-width: 1280px;
     margin: 0 auto;
     flex-grow: 1;
     padding: 20px 0;
 }
-
 .player-container {
     background-color: var(--card-bg-color);
     padding: 25px;
@@ -89,27 +86,40 @@ body {
     text-align: center;
     position: relative;
 }
-
-.track-title { margin:0; font-size:1.5rem; font-weight:500; color: var(--heading-color); }
-
-video { width: 100%; height: auto; min-height: 250px; border-radius: var(--border-radius); background-color:#000; }
-
-@media(max-width:768px){
-    .main-header { margin-bottom:30px; }
-    .page-title { font-size:2rem; margin-bottom:15px; }
-    .header-actions { flex-direction:column; gap:15px; }
-    .btn { width:80%; margin:0 auto; }
-    .player-grid-container { grid-template-columns:1fr; gap:25px; padding:10px 0; }
-    .player-container { padding:20px; }
-    .track-title { font-size:1.3rem; }
+.track-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--heading-color);
+}
+video {
+    width: 100%;
+    height: auto;
+    min-height: 250px;
+    border-radius: var(--border-radius);
+    background-color: #000;
+}
+.custom-controls {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+@media (max-width: 768px) {
+    .main-header { margin-bottom: 30px; }
+    .page-title { font-size: 2rem; margin-bottom: 15px; }
+    .header-actions { flex-direction: column; gap: 15px; }
+    .btn { width: 80%; margin: 0 auto; }
+    .player-grid-container { grid-template-columns: 1fr; gap: 25px; padding: 10px 0; }
+    .player-container { padding: 20px; }
+    .track-title { font-size: 1.3rem; }
 }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.2.7/shaka-player.compiled.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.2.7/shaka-player.compiled.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.2.7/shaka-player.ui.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.2.7/controls.css">
 </head>
 <body>
+
 <header class="main-header">
     <h1 class="page-title">PyCon JP 2025 Live</h1>
     <div class="header-actions">
@@ -118,8 +128,7 @@ video { width: 100%; height: auto; min-height: 250px; border-radius: var(--borde
     </div>
 </header>
 
-<main class="player-grid-container">
-</main>
+<main class="player-grid-container"></main>
 
 <script>
 const CLIENT_ID = "i0VwMUzGedRaeEq1OVFZ7ez9XGnKeptlTOEK5Nlr";
@@ -128,104 +137,115 @@ const urlParams = new URLSearchParams(window.location.search);
 const token = urlParams.get('token');
 const is_debug = urlParams.get('is_debug') === '1';
 
-function decodeJwt(token){
-    if(!token) return null;
-    try { return JSON.parse(atob(token.split('.')[1])); } 
-    catch(e){ console.error("JWT decode failed", e); return null; }
+// JWTデコード
+function decodeJwt(token) {
+    if (!token) return null;
+    try {
+        const payloadBase64 = token.split('.')[1];
+        const payload = JSON.parse(atob(payloadBase64));
+        return payload;
+    } catch(e) {
+        console.error("JWTデコード失敗", e);
+        return null;
+    }
 }
 
-// トラック情報
-const tracks = [
-    {id:'d65dac2d-b1fa-44f5-9d25-2c7271862104', title:'Track 1', poster:'poster_1.jpg'},
-    {id:'e5284a46-0808-4329-a4ab-685e0d2db588', title:'Track 2', poster:'poster_2.jpg'},
-    {id:'f17e2dca-3e56-4d71-99f6-7ba976311b69', title:'Track 3', poster:'poster_3.jpg'},
-    {id:'072eed0b-8397-4b07-a202-510bce4d6097', title:'Track 4', poster:'poster_4.jpg'}
-];
-
-function createTrack(track){
+// トラックごとにプレイヤー作成
+function createTrack(trackId, title, poster) {
     const container = document.createElement('div');
-    container.className='player-container';
+    container.className = 'player-container';
 
     const h3 = document.createElement('h3');
-    h3.className='track-title';
-    h3.textContent = track.title;
+    h3.className = 'track-title';
+    h3.textContent = title;
 
     const video = document.createElement('video');
-    video.id=track.id;
-    video.poster=track.poster;
-    video.controls=false;
-
-    const btn = document.createElement('button');
-    btn.textContent='再生';
-    btn.disabled=true;
-
-    btn.addEventListener('click', async ()=>{
-        if(!token) return alert("トークンがありません");
-        const payload = decodeJwt(token);
-        if(!payload || !payload.jstream_registered_tracks) return alert("視聴権限がありません");
-        if(!payload.jstream_registered_tracks[track.id]) return alert("このトラックの視聴権限がありません");
-
-        try {
-            btn.disabled=true;
-            btn.textContent='再生準備中...';
-            let sessionUrl = `https://auth.streamtech.cloud/session?token=${token}&stream_id=${track.id}`;
-            if(is_debug) sessionUrl+='&is_debug=1';
-            const res = await fetch(sessionUrl);
-            if(!res.ok) throw new Error('Session取得失敗');
-            const data = await res.json();
-
-            // Shaka Player
-            const player = new shaka.Player(video);
-            player.load(data.playback_url).then(()=>{
-                btn.textContent='再生中';
-                video.play().catch(()=>console.log("自動再生不可"));
-            }).catch(e=>{console.error(e); alert("再生失敗"); btn.disabled=false; btn.textContent='再生';});
-
-            const ui = new shaka.ui.Overlay(player, container, video);
-            player.configure({controlPanelElements:['play_pause','mute','volume','fullscreen']});
-            // シークバーを非表示に
-            const controls = ui.getControls();
-            if(controls.seekBarContainer) controls.seekBarContainer.style.display='none';
-
-        } catch(e){ console.error("Session取得エラー", e); alert("ストリーム再生に失敗"); btn.disabled=false; btn.textContent='再生';}
-    });
-
+    video.id = trackId;
+    video.poster = poster;
+    video.controls = true;
+    video.autoplay = false;
     container.appendChild(h3);
     container.appendChild(video);
+
+    const btn = document.createElement('button');
+    btn.textContent = '再生';
+    btn.disabled = true;
+    btn.addEventListener('click', async () => {
+        if (!token) return alert("トークンがありません");
+        const payload = decodeJwt(token);
+        if (!payload?.jstream_registered_tracks) return alert("視聴権限がありません");
+        if (!payload.jstream_registered_tracks[trackId]) return alert("このトラックの視聴権限がありません");
+
+        btn.disabled = true;
+        btn.textContent = '再生準備中...';
+        try {
+            let sessionUrl = `https://auth.streamtech.cloud/session?token=${token}&stream_id=${trackId}`;
+            if(is_debug) sessionUrl += "&is_debug=1";
+            const res = await fetch(sessionUrl);
+            if(!res.ok) throw new Error("Session取得失敗");
+            const data = await res.json();
+
+            const player = new shaka.Player(video);
+            const ui = new shaka.ui.Overlay(player, video.parentElement, video);
+            ui.getControls().seekBarContainer.style.display = 'none'; // シークバー非表示
+            player.load(data.playback_url).then(() => {
+                btn.textContent = '再生中';
+            }).catch(e => {
+                console.error("再生エラー", e);
+                btn.textContent = '再生';
+                btn.disabled = false;
+            });
+        } catch(e) {
+            console.error("Session取得エラー", e);
+            alert("ストリーム再生に失敗しました。");
+            btn.textContent = '再生';
+            btn.disabled = false;
+        }
+    });
+
     container.appendChild(btn);
     document.querySelector('.player-grid-container').appendChild(container);
 }
 
-window.onload=()=>{
-    const payload = decodeJwt(token);
-    const registeredTracks = payload?.jstream_registered_tracks||{};
-    tracks.forEach(track=>{
-        createTrack(track);
-        const video=document.getElementById(track.id);
-        const btn=video.nextElementSibling;
-        if(registeredTracks[track.id]){
-            btn.disabled=false;
-        }
-    });
-
+// ページ初期化
+window.onload = () => {
     const getRightsBtn = document.getElementById('get-rights-btn');
     const purchaseBtn = document.getElementById('purchase-btn');
 
-    getRightsBtn.addEventListener('click', ()=>{
+    // 仮トラック
+    const tracks = [
+        {id:'d65dac2d-b1fa-44f5-9d25-2c7271862104', title:'Track 1', poster:'poster_1.jpg'},
+        {id:'e5284a46-0808-4329-a4ab-685e0d2db588', title:'Track 2', poster:'poster_2.jpg'},
+        {id:'f17e2dca-3e56-4d71-99f6-7ba976311b69', title:'Track 3', poster:'poster_3.jpg'},
+        {id:'072eed0b-8397-4b07-a202-510bce4d6097', title:'Track 4', poster:'poster_4.jpg'}
+    ];
+    tracks.forEach(t=>createTrack(t.id,t.title,t.poster));
+
+    getRightsBtn.addEventListener('click', () => {
         if(!token){
             const url = new URL('https://pretix.eu/pyconjp/oauth2/v1/authorize');
-            url.searchParams.set('client_id',CLIENT_ID);
+            url.searchParams.set('client_id', CLIENT_ID);
             url.searchParams.set('response_type','code');
             url.searchParams.set('scope','openid profile email');
             url.searchParams.set('redirect_uri',REDIRECT_URI);
-            window.location.href=url.toString();
+            window.location.href = url.toString();
         }
     });
 
-    if(payload && payload.has_ticket){
-        purchaseBtn.style.pointerEvents='none';
-        purchaseBtn.style.opacity=0.5;
-        getRightsBtn.style.display='none';
+    if(token){
+        const payload = decodeJwt(token);
+        if(payload?.has_ticket && payload?.jstream_registered_tracks){
+            purchaseBtn.style.pointerEvents = 'none';
+            purchaseBtn.style.opacity = 0.5;
+            getRightsBtn.style.display = 'none';
+
+            tracks.forEach(track=>{
+                const video = document.getElementById(track.id);
+                if(!video) return;
+                const btn = video.nextElementSibling;
+                if(btn && btn.tagName.toLowerCase() === 'button') btn.disabled = false;
+            });
+        }
     }
 };
 </script>
