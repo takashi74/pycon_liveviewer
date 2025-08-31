@@ -82,13 +82,13 @@ function createTrack(trackId, title) {
         const payload = decodeJwt(token);
         if (!payload || !payload.jstream_registered_tracks) return alert("視聴権限がありません");
 
-        const streamId = payload.jstream_registered_tracks[trackId];
-        if (!streamId) return alert("このトラックの視聴権限がありません");
+        const hasAccess = payload.jstream_registered_tracks[trackId];
+        if (!hasAccess) return alert("このトラックの視聴権限がありません");
 
         try {
             btn.disabled = true;
             btn.textContent = '再生準備中...';
-            const response = await fetch(`https://auth.streamtech.cloud/session?token=${token}&stream_id=${streamId}`);
+            const response = await fetch(`https://auth.streamtech.cloud/session?token=${token}&stream_id=${trackId}`);
             if (!response.ok) throw new Error('ストリーム取得失敗');
             const data = await response.json();
             setVideoSource(video, data.playback_url);
