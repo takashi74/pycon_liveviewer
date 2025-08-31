@@ -123,7 +123,12 @@ async function fetchSession(streamId) {
     let url = `/session?token=${encodeURIComponent(token)}&stream_id=${encodeURIComponent(streamId)}`;
     if (is_debug) url += "&is_debug=1";
     const res = await fetch(url);
-    if (!res.ok) throw new Error('Session取得失敗');
+    // ステータスコードが200番台以外の場合は、エラー内容をログに出力
+    if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`Session取得失敗: HTTP Status ${res.status}`, errorText);
+        throw new Error(`Session取得失敗: ${res.statusText}`);
+    }
     return await res.json();
 }
 
