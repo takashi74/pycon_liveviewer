@@ -52,7 +52,11 @@ function setVideoSource(video, url) {
         const hls = new Hls();
         hls.loadSource(url);
         hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => video.controls = true);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            video.controls = true;
+            video.play().catch(err => console.warn("自動再生できませんでした:", err));
+            btn.textContent = '再生中';
+        });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
         video.addEventListener('loadedmetadata', () => video.controls = true);
