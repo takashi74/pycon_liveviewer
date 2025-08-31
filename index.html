@@ -83,14 +83,15 @@ function createTrack(trackId, title) {
         try {
             btn.disabled = true;
             btn.textContent = '再生準備中...';
-            const response = await fetch('https://auth.streamtech.cloud/get-stream-url', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ token, stream_id: trackId })
-            });
-            if (!response.ok) throw new Error('ストリーム取得失敗');
+
+            // FastAPI /session エンドポイントにGETでアクセス
+            const url = `https://auth.streamtech.cloud/session?token=${encodeURIComponent(token)}&stream_id=${encodeURIComponent(trackId)}`;
+            const response = await fetch(url, { method: 'GET' });
+
+            if (!response.ok) throw new Error(`ストリーム取得失敗: ${response.status}`);
             const data = await response.json();
             setVideoSource(video, data.playback_url);
+
             btn.textContent = '再生中';
         } catch (e) {
             console.error("ストリーム取得エラー", e);
@@ -111,10 +112,11 @@ window.onload = () => {
     const getRightsBtn = document.getElementById('get-rights-btn');
     const purchaseBtn = document.getElementById('purchase-btn');
 
-    // トラック情報（仮：サーバーAPIから取得できれば可変化可能）
+    // トラック情報（サーバーAPIから取得可能にする場合はここを書き換え）
     const tracks = ['track1', 'track2', 'track3', 'track4'];
     tracks.forEach(t => createTrack(t, t));
 
+    // 視聴権利取得ボタン
     getRightsBtn.addEventListener('click', () => {
         if (!token) {
             // Pretix OAuth2認証
