@@ -25,71 +25,88 @@ function decodeJwt(token) {
         const payload = atob(payloadBase64);
         return JSON.parse(payload);
     } catch (e) {
-        console.error("JWTのデコードに失敗しました:", e);
+        console.error("JWTのデコードに失敗しました。", e);
         return null;
     }
 }
 
-// 動画をロードして再生する関数
-function playVideo(videoId, streamUrl) {
-    const videoElement = document.getElementById(videoId);
+// HLS.jsで動画を再生する関数
+function playVideo(videoId, url) {
+    const video = document.getElementById(videoId);
+    if (!video) return;
+
     if (Hls.isSupported()) {
         const hls = new Hls();
-        hls.loadSource(streamUrl);
-        hls.attachMedia(videoElement);
-        videoElement.play();
-    } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
-        videoElement.src = streamUrl;
-        videoElement.play();
-    }
-}
-
-// チケット購入済みの場合にボタンを無効化し、動画を再生
-if (token) {
-    const payload = decodeJwt(token);
-    
-    // チケット購入済みであればボタンを無効化
-    if (payload && payload.has_ticket) {
-        console.log("チケット購入が確認されました。'視聴チケット購入'ボタンを無効化します。");
-        
-        const primaryBtn = document.querySelector('.btn-primary');
-        primaryBtn.style.pointerEvents = 'none';
-        primaryBtn.style.opacity = '0.5';
-        primaryBtn.href = '#';
-
-        // バックエンドから動画URLを取得するAPIを呼び出す
-        fetch('https://auth.streamtech.cloud/get-stream-url', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ token: token })
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw new Error(err.detail || 'Failed to fetch stream URLs.'); });
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.track1_url) {
-                playVideo('video1', data.track1_url);
-            }
-            if (data.track2_url) {
-                playVideo('video2', data.track2_url);
-            }
-            if (data.track3_url) {
-                playVideo('video3', data.track3_url);
-            }
-            if (data.track4_url) {
-                playVideo('video4', data.track4_url);
-            }
-        })
-        .catch(error => {
-            console.error('動画URLの取得に失敗しました:', error);
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            console.log(`動画の再生を開始します: ${videoId}`);
+            video.play();
         });
-
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', function() {
+            console.log(`動画の再生を開始します: ${videoId}`);
+            video.play();
+        });
     } else {
-        console.log("チケット情報が見つからないか、購入が未完了です。");
+        console.error('HLSがこのブラウザでサポートされていません。');
     }
 }
+
+// 初期化処理
+window.onload = () => {
+    if (token) {
+        const payload = decodeJwt(token);
+        if (!payload) {
+            console.error("無効なトークンです。");
+            return;
+        }
+
+        // 視聴権利の取得ボタンを無効化するのは、チケットを所有している時のみ
+        const getRightsBtn = document.getElementById('get-rights-btn');
+        if (payload.has_ticket) {
+            console.log("チケット購入が確認されました。'視聴権利の取得'ボタンを無効化します。");
+            getRightsBtn.style.pointerEvents = 'none';
+            getRightsBtn.style.opacity = '0.5';
+
+            // バックエンドから動画URLを取得するAPIを呼び出す
+            fetch('https://auth.streamtech.cloud/get-stream-url', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token: token })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.detail || 'Failed to fetch stream URLs.'); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 返されたURLを使って各ビデオを再生
+                if (data.track1_url) {
+                    playVideo('video1', data.track1_url);
+                }
+                if (data.track2_url) {
+                    playVideo('video2', data.track2_url);
+                }
+                if (data.track3_url) {
+                    playVideo('video3', data.track3_url);
+                }
+                if (data.track4_url) {
+                    playVideo('video4', data.track4_url);
+                }
+            })
+            .catch(error => {
+                console.error("ストリームURLの取得中にエラーが発生しました:", error);
+            });
+
+        } else {
+            console.log("ライブ配信チケットはまだ購入されていません。");
+            // トークンは有効だがチケットがない場合
+            alert("ライブ配信チケットはまだ購入されていません。チケットを購入してから再度お試しください。");
+        }
+    }
+};
