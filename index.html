@@ -33,9 +33,10 @@
 const CLIENT_ID = "i0VwMUzGedRaeEq1OVFZ7ez9XGnKeptlTOEK5Nlr";
 const REDIRECT_URI = "https://auth.streamtech.cloud/callback";
 
-// URLからis_debugを取得し、グローバル変数として定義
+// URLからis_debugとトークンを取得し、グローバル変数として定義
 const urlParams = new URLSearchParams(window.location.search);
 const is_debug = urlParams.get('is_debug') === '1';
+let token = urlParams.get('token');
 
 /**
  * JWTをデコードしてペイロードを取得します。
@@ -140,10 +141,19 @@ function createTrack(trackId, title) {
             if (is_debug) {
                 sessionUrl += "&is_debug=1";
             }
+            
+            // Authorizationヘッダーにトークンを含める
+            const headers = new Headers();
+            if (token) {
+                headers.append('Authorization', `Bearer ${token}`);
+            }
 
-            const response = await fetch(sessionUrl, { credentials: 'include' });
+            const response = await fetch(sessionUrl, { 
+                headers: headers,
+                credentials: 'include' 
+            });
+            
             if (!response.ok) {
-                // サーバー側で認証失敗した場合もここでエラーになる
                 throw new Error('ストリーム取得失敗');
             }
             const data = await response.json();
@@ -187,9 +197,8 @@ window.onload = () => {
         window.location.href = url.toString();
     });
 
-    const urlToken = urlParams.get('token');
-    if (urlToken) {
-        const payload = decodeJwt(urlToken);
+    if (token) {
+        const payload = decodeJwt(token);
         if (payload && payload.has_ticket) {
             enablePlayButtons();
         }
