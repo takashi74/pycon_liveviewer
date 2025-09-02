@@ -10,9 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  body {
-      font-family: 'IBM Plex Sans JP', sans-serif;
-  }
+  body { font-family: 'IBM Plex Sans JP', sans-serif; }
 </style>
 </head>
 <body class="bg-slate-900 text-slate-50 min-h-screen flex flex-col">
@@ -33,22 +31,25 @@
 const CLIENT_ID = "i0VwMUzGedRaeEq1OVFZ7ez9XGnKeptlTOEK5Nlr";
 const REDIRECT_URI = "https://auth.streamtech.cloud/callback";
 
-// URLからis_debugとトークンを取得し、グローバル変数として定義
+// Safari 判定
+function isSafari() {
+    const ua = navigator.userAgent;
+    return /Safari/.test(ua) && !/Chrome/.test(ua);
+}
+
+// URLパラメータからトークンとis_debugを取得
 const urlParams = new URLSearchParams(window.location.search);
 const is_debug = urlParams.get('is_debug') === '1';
 let token = urlParams.get('token');
 
 /**
- * JWTをデコードしてペイロードを取得します。
- * @param {string} token
- * @returns {object|null}
+ * JWTデコード
  */
 function decodeJwt(token) {
     if (!token) return null;
     try {
         const payloadBase64 = token.split('.')[1];
-        const payload = JSON.parse(atob(payloadBase64));
-        return payload;
+        return JSON.parse(atob(payloadBase64));
     } catch (e) {
         console.error("JWTデコード失敗", e);
         return null;
@@ -56,18 +57,14 @@ function decodeJwt(token) {
 }
 
 /**
- * HLS動画ソースをセットし、再生を開始します。
- * @param {HTMLVideoElement} video
- * @param {string} url
+ * HLS動画セット
  */
 function setVideoSource(video, url) {
     if (Hls.isSupported()) {
         const hls = new Hls();
         hls.loadSource(url);
         hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            video.play().catch(err => console.warn("自動再生できませんでした:", err));
-        });
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(()=>{}));
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
         video.addEventListener('loadedmetadata', () => video.controls = true);
@@ -77,39 +74,36 @@ function setVideoSource(video, url) {
 }
 
 /**
- * 視聴開始ボタンの有効化と外観の更新
+ * ボタン有効化
  */
 function enablePlayButtons() {
     const purchaseBtn = document.getElementById('purchase-btn');
     const getRightsBtn = document.getElementById('get-rights-btn');
     const tracks = [
-        {id: '54d5a3f3-08d9-42eb-b047-6f403dda7eb4', title: 'Track 1'},
-        {id: 'fc43fba3-9bf5-49b8-a9c2-3174b5d75920', title: 'Track 2'},
-        {id: 'c5702855-fe83-49a3-a3eb-ed0e694c739e', title: 'Track 3'},
-        {id: '4d0a0296-1b38-4863-8e78-95b201b04418', title: 'Track 4'}
+        {id: '54d5a3f3-08d9-42eb-b047-6f403dda7eb4'},
+        {id: 'fc43fba3-9bf5-49b8-a9c2-3174b5d75920'},
+        {id: 'c5702855-fe83-49a3-a3eb-ed0e694c739e'},
+        {id: '4d0a0296-1b38-4863-8e78-95b201b04418'}
     ];
-    
-    purchaseBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+    purchaseBtn.classList.add('opacity-50','cursor-not-allowed');
     purchaseBtn.style.pointerEvents = 'none';
     getRightsBtn.style.display = 'none';
 
     tracks.forEach(track => {
         const videoElement = document.getElementById(track.id);
-        if (videoElement) {
-            const btn = videoElement.nextElementSibling;
-            if (btn && btn.tagName === 'BUTTON') {
-                btn.disabled = false;
-                btn.classList.remove('bg-slate-700', 'hover:bg-slate-600', 'text-slate-200');
-                btn.classList.add('bg-orange-600', 'hover:bg-orange-700', 'text-white');
-            }
+        if (!videoElement) return;
+        const btn = videoElement.nextElementSibling;
+        if (btn && btn.tagName==='BUTTON') {
+            btn.disabled=false;
+            btn.classList.remove('bg-slate-700','hover:bg-slate-600','text-slate-200');
+            btn.classList.add('bg-orange-600','hover:bg-orange-700','text-white');
         }
     });
 }
 
 /**
- * トラックごとにプレイヤー要素を作成します。
- * @param {string} trackId
- * @param {string} title
+ * トラック要素生成
  */
 function createTrack(trackId, title) {
     const container = document.createElement('div');
@@ -138,24 +132,16 @@ function createTrack(trackId, title) {
             btn.textContent = '再生準備中...';
 
             let sessionUrl = `https://auth.streamtech.cloud/session?stream_id=${trackId}`;
-            if (is_debug) {
-                sessionUrl += "&is_debug=1";
-            }
-            
-            // Authorizationヘッダーにトークンを含める
-            const headers = new Headers();
-            if (token) {
-                headers.append('Authorization', `Bearer ${token}`);
+            if (is_debug) sessionUrl += "&is_debug=1";
+
+            const fetchOptions = { credentials: 'include' };
+            if (isSafari() && token) {
+                fetchOptions.headers = { 'Authorization': `Bearer ${token}` };
             }
 
-            const response = await fetch(sessionUrl, { 
-                headers: headers,
-                credentials: 'include' 
-            });
-            
-            if (!response.ok) {
-                throw new Error('ストリーム取得失敗');
-            }
+            const response = await fetch(sessionUrl, fetchOptions);
+            if (!response.ok) throw new Error('ストリーム取得失敗');
+
             const data = await response.json();
             setVideoSource(video, data.playback_url);
             btn.textContent = '再生中';
@@ -173,12 +159,10 @@ function createTrack(trackId, title) {
     document.querySelector('main').appendChild(container);
 }
 
-// ページ初期化
+// 初期化
 window.onload = () => {
     const getRightsBtn = document.getElementById('get-rights-btn');
-    const purchaseBtn = document.getElementById('purchase-btn');
-    
-    // 仮のトラック情報
+
     const tracks = [
         {id: '54d5a3f3-08d9-42eb-b047-6f403dda7eb4', title: 'Track 1'},
         {id: 'fc43fba3-9bf5-49b8-a9c2-3174b5d75920', title: 'Track 2'},
@@ -199,9 +183,7 @@ window.onload = () => {
 
     if (token) {
         const payload = decodeJwt(token);
-        if (payload && payload.has_ticket) {
-            enablePlayButtons();
-        }
+        if (payload && payload.has_ticket) enablePlayButtons();
     }
 };
 </script>
