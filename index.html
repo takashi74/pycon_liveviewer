@@ -94,11 +94,14 @@ function enablePlayButtons() {
     getRightsBtn.style.display = 'none';
 
     tracks.forEach(track => {
-        const btn = document.querySelector(`#${track.id} + button`);
-        if (btn) {
-            btn.disabled = false;
-            btn.classList.remove('bg-slate-700', 'hover:bg-slate-600', 'text-slate-200');
-            btn.classList.add('bg-orange-600', 'hover:bg-orange-700', 'text-white');
+        const videoElement = document.getElementById(track.id);
+        if (videoElement) {
+            const btn = videoElement.nextElementSibling;
+            if (btn && btn.tagName === 'BUTTON') {
+                btn.disabled = false;
+                btn.classList.remove('bg-slate-700', 'hover:bg-slate-600', 'text-slate-200');
+                btn.classList.add('bg-orange-600', 'hover:bg-orange-700', 'text-white');
+            }
         }
     });
 }
