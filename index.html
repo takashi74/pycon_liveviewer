@@ -1,27 +1,31 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PyCon JP 2025 Live</title>
-<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+<style>
+  body {
+      font-family: 'IBM Plex Sans JP', sans-serif;
+  }
+</style>
 </head>
-<body>
+<body class="bg-slate-900 text-slate-50 min-h-screen flex flex-col">
 
-<header class="main-header">
-    <h1 class="page-title">PyCon JP 2025 Live</h1>
-    <div class="header-actions">
-        <a id="purchase-btn" href="https://pretix.eu/pyconjp/2025/" class="btn btn-primary" target="_blank">視聴チケット購入</a>
-        <button id="get-rights-btn" class="btn btn-secondary">視聴権利の取得</button>
+<header class="bg-slate-800 text-white p-4 flex flex-col sm:flex-row justify-between items-center shadow-lg">
+    <h1 class="text-xl sm:text-2xl font-bold mb-2 sm:mb-0">PyCon JP 2025 Live</h1>
+    <div class="flex space-x-2">
+        <a id="purchase-btn" href="https://pretix.eu/pyconjp/2025/" class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 bg-orange-600 hover:bg-orange-700 text-white" target="_blank">視聴チケット購入</a>
+        <button id="get-rights-btn" class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 bg-slate-700 hover:bg-slate-600 text-slate-200">視聴権利の取得</button>
     </div>
 </header>
 
-<main class="player-grid-container">
+<main class="p-4 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
     <!-- プレイヤーはここに動的生成 -->
 </main>
 
@@ -29,12 +33,30 @@
 const CLIENT_ID = "i0VwMUzGedRaeEq1OVFZ7ez9XGnKeptlTOEK5Nlr";
 const REDIRECT_URI = "https://auth.streamtech.cloud/callback";
 
-// URLからトークン取得
+// URLからis_debugを取得（トークンはクッキーから）
 const urlParams = new URLSearchParams(window.location.search);
-const token = urlParams.get('token');
 const is_debug = urlParams.get('is_debug') === '1';
 
-// JWTデコード
+/**
+ * クッキーから指定された名前の値を取得します。
+ * @param {string} name - クッキーの名前
+ * @returns {string|null} - クッキーの値、存在しない場合はnull
+ */
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+// クッキーからトークンを取得
+const token = getCookie('auth_token');
+
+/**
+ * JWTをデコードしてペイロードを取得します。
+ * @param {string} token
+ * @returns {object|null}
+ */
 function decodeJwt(token) {
     if (!token) return null;
     try {
@@ -47,14 +69,11 @@ function decodeJwt(token) {
     }
 }
 
-const playBtn = document.createElement('button');
-playBtn.textContent = '▶️';
-playBtn.addEventListener('click', () => {
-    if (video.paused) video.play();
-    else video.pause();
-});
-
-// HLS動画再生
+/**
+ * HLS動画ソースをセットし、再生を開始します。
+ * @param {HTMLVideoElement} video
+ * @param {string} url
+ */
 function setVideoSource(video, url) {
     if (Hls.isSupported()) {
         const hls = new Hls();
@@ -62,7 +81,6 @@ function setVideoSource(video, url) {
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
             video.play().catch(err => console.warn("自動再生できませんでした:", err));
-            btn.textContent = '再生中';
         });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
@@ -72,13 +90,17 @@ function setVideoSource(video, url) {
     }
 }
 
-// トラックごとにプレイヤー作成
+/**
+ * トラックごとにプレイヤー要素を作成します。
+ * @param {string} trackId
+ * @param {string} title
+ */
 function createTrack(trackId, title) {
     const container = document.createElement('div');
-    container.className = 'player-container';
+    container.className = 'bg-slate-800 p-4 rounded-xl shadow-xl flex flex-col items-center';
 
     const h3 = document.createElement('h3');
-    h3.className = 'track-title';
+    h3.className = 'text-lg font-semibold mb-3 text-slate-50';
     h3.textContent = title;
 
     const video = document.createElement('video');
@@ -87,17 +109,19 @@ function createTrack(trackId, title) {
     video.controls = false;
     video.autoplay = false;
     video.muted = false;
+    video.className = 'w-full h-auto rounded-lg shadow-md';
 
     const btn = document.createElement('button');
-    btn.textContent = '再生';
+    btn.className = 'mt-4 px-6 py-2 rounded-full font-bold transition-all duration-300 transform hover:scale-105 bg-slate-700 hover:bg-slate-600 text-slate-200';
+    btn.textContent = '視聴開始';
     btn.disabled = true;
-    btn.addEventListener('click', async () => {
-        if (!token) return alert("トークンがありません");
-        const payload = decodeJwt(token);
-        if (!payload || !payload.jstream_registered_tracks) return alert("視聴権限がありません");
 
-        const hasAccess = payload.jstream_registered_tracks[trackId];
-        if (!hasAccess) return alert("このトラックの視聴権限がありません");
+    btn.addEventListener('click', async () => {
+        // トークンの有無のみをチェック
+        if (!token) {
+            alert("再生権限がありません。視聴権利を取得してください。");
+            return;
+        }
 
         try {
             btn.disabled = true;
@@ -109,14 +133,17 @@ function createTrack(trackId, title) {
             }
 
             const response = await fetch(sessionUrl);
-            if (!response.ok) throw new Error('ストリーム取得失敗');
+            if (!response.ok) {
+                // サーバー側で認証失敗した場合もここでエラーになる
+                throw new Error('ストリーム取得失敗');
+            }
             const data = await response.json();
             setVideoSource(video, data.playback_url);
             btn.textContent = '再生中';
         } catch (e) {
             console.error("ストリーム取得エラー", e);
-            alert("再生に失敗しました。コンソール確認");
-            btn.textContent = '再生';
+            alert("再生に失敗しました。視聴権利があるかご確認ください。");
+            btn.textContent = '視聴開始';
             btn.disabled = false;
         }
     });
@@ -124,14 +151,14 @@ function createTrack(trackId, title) {
     container.appendChild(h3);
     container.appendChild(video);
     container.appendChild(btn);
-    document.querySelector('.player-grid-container').appendChild(container);
+    document.querySelector('main').appendChild(container);
 }
 
 // ページ初期化
 window.onload = () => {
     const getRightsBtn = document.getElementById('get-rights-btn');
     const purchaseBtn = document.getElementById('purchase-btn');
-
+    
     // 仮のトラック情報
     const tracks = [
         {id: '54d5a3f3-08d9-42eb-b047-6f403dda7eb4', title: 'Track 1'},
@@ -155,25 +182,23 @@ window.onload = () => {
 
     if (token) {
         const payload = decodeJwt(token);
-        if (payload && payload.has_ticket && payload.jstream_registered_tracks) {
+        // has_ticketの有無のみをチェックし、すべてのプレイヤーを有効化
+        if (payload && payload.has_ticket) {
+            purchaseBtn.classList.add('opacity-50', 'cursor-not-allowed');
             purchaseBtn.style.pointerEvents = 'none';
-            purchaseBtn.style.opacity = 0.5;
             getRightsBtn.style.display = 'none';
 
             tracks.forEach(track => {
-                const video = document.getElementById(track.id);
-                if (!video) return;
-
-                // video の次の button を取得
-                const btn = video.nextElementSibling;
-                if (btn && btn.tagName.toLowerCase() === 'button') {
+                const btn = document.querySelector(`#${track.id} + button`);
+                if (btn) {
                     btn.disabled = false;
+                    btn.classList.remove('bg-slate-700', 'hover:bg-slate-600', 'text-slate-200');
+                    btn.classList.add('bg-orange-600', 'hover:bg-orange-700', 'text-white');
                 }
             });
         }
     }
 };
 </script>
-
 </body>
 </html>
