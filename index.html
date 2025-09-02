@@ -171,7 +171,7 @@ window.onload = () => {
         // クッキーではなく、URLでトークンを受け取るため、redirect_uriを動的に構築
         const url = new URL('https://pretix.eu/pyconjp/oauth2/v1/authorize');
         url.searchParams.set('client_id', CLIENT_ID);
-        url.searchParams.set('response_type', 'token'); // codeからtokenに変更
+        url.searchParams.set('response_type', 'code'); // Pretixの仕様に合わせてtokenからcodeに変更
         url.searchParams.set('scope', 'openid profile email');
         url.searchParams.set('redirect_uri', REDIRECT_URI); // 正しい定数を使用
         window.location.href = url.toString();
