@@ -36,19 +36,7 @@ const REDIRECT_URI = "https://auth.streamtech.cloud/callback";
 // URLからis_debugとトークンを取得
 const urlParams = new URLSearchParams(window.location.search);
 const is_debug = urlParams.get('is_debug') === '1';
-const token = urlParams.get('token');
-
-/**
- * クッキーから指定された名前の値を取得します。
- * @param {string} name - クッキーの名前
- * @returns {string|null} - クッキーの値、存在しない場合はnull
- */
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return null;
-}
+let token = urlParams.get('token'); // グローバルスコープで定義
 
 /**
  * JWTをデコードしてペイロードを取得します。
@@ -86,6 +74,33 @@ function setVideoSource(video, url) {
     } else {
         console.error("HLS非対応ブラウザ");
     }
+}
+
+/**
+ * 視聴開始ボタンの有効化と外観の更新
+ */
+function enablePlayButtons() {
+    const purchaseBtn = document.getElementById('purchase-btn');
+    const getRightsBtn = document.getElementById('get-rights-btn');
+    const tracks = [
+        {id: '54d5a3f3-08d9-42eb-b047-6f403dda7eb4', title: 'Track 1'},
+        {id: 'fc43fba3-9bf5-49b8-a9c2-3174b5d75920', title: 'Track 2'},
+        {id: 'c5702855-fe83-49a3-a3eb-ed0e694c739e', title: 'Track 3'},
+        {id: '4d0a0296-1b38-4863-8e78-95b201b04418', title: 'Track 4'}
+    ];
+    
+    purchaseBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    purchaseBtn.style.pointerEvents = 'none';
+    getRightsBtn.style.display = 'none';
+
+    tracks.forEach(track => {
+        const btn = document.querySelector(`#${track.id} + button`);
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('bg-slate-700', 'hover:bg-slate-600', 'text-slate-200');
+            btn.classList.add('bg-orange-600', 'hover:bg-orange-700', 'text-white');
+        }
+    });
 }
 
 /**
@@ -168,31 +183,18 @@ window.onload = () => {
     tracks.forEach(track => createTrack(track.id, track.title));
 
     getRightsBtn.addEventListener('click', () => {
-        // クッキーではなく、URLでトークンを受け取るため、redirect_uriを動的に構築
         const url = new URL('https://pretix.eu/pyconjp/oauth2/v1/authorize');
         url.searchParams.set('client_id', CLIENT_ID);
-        url.searchParams.set('response_type', 'code'); // Pretixの仕様に合わせてtokenからcodeに変更
+        url.searchParams.set('response_type', 'code');
         url.searchParams.set('scope', 'openid profile email');
-        url.searchParams.set('redirect_uri', REDIRECT_URI); // 正しい定数を使用
+        url.searchParams.set('redirect_uri', REDIRECT_URI);
         window.location.href = url.toString();
     });
 
     if (token) {
         const payload = decodeJwt(token);
-        // has_ticketの有無のみをチェックし、すべてのプレイヤーを有効化
         if (payload && payload.has_ticket) {
-            purchaseBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            purchaseBtn.style.pointerEvents = 'none';
-            getRightsBtn.style.display = 'none';
-
-            tracks.forEach(track => {
-                const btn = document.querySelector(`#${track.id} + button`);
-                if (btn) {
-                    btn.disabled = false;
-                    btn.classList.remove('bg-slate-700', 'hover:bg-slate-600', 'text-slate-200');
-                    btn.classList.add('bg-orange-600', 'hover:bg-orange-700', 'text-white');
-                }
-            });
+            enablePlayButtons();
         }
     }
 };
