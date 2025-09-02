@@ -141,7 +141,7 @@ function createTrack(trackId, title) {
                 sessionUrl += "&is_debug=1";
             }
 
-            const response = await fetch(sessionUrl);
+            const response = await fetch(sessionUrl, { credentials: 'include' });
             if (!response.ok) {
                 // サーバー側で認証失敗した場合もここでエラーになる
                 throw new Error('ストリーム取得失敗');
