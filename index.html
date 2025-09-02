@@ -33,9 +33,10 @@
 const CLIENT_ID = "i0VwMUzGedRaeEq1OVFZ7ez9XGnKeptlTOEK5Nlr";
 const REDIRECT_URI = "https://auth.streamtech.cloud/callback";
 
-// URLからis_debugを取得（トークンはクッキーから）
+// URLからis_debugとトークンを取得
 const urlParams = new URLSearchParams(window.location.search);
 const is_debug = urlParams.get('is_debug') === '1';
+const token = urlParams.get('token');
 
 /**
  * クッキーから指定された名前の値を取得します。
@@ -48,9 +49,6 @@ function getCookie(name) {
     if (parts.length === 2) return parts.pop().split(';').shift();
     return null;
 }
-
-// クッキーからトークンを取得
-const token = getCookie('auth_token');
 
 /**
  * JWTをデコードしてペイロードを取得します。
@@ -170,14 +168,13 @@ window.onload = () => {
     tracks.forEach(track => createTrack(track.id, track.title));
 
     getRightsBtn.addEventListener('click', () => {
-        if (!token) {
-            const url = new URL('https://pretix.eu/pyconjp/oauth2/v1/authorize');
-            url.searchParams.set('client_id', CLIENT_ID);
-            url.searchParams.set('response_type', 'code');
-            url.searchParams.set('scope', 'openid profile email');
-            url.searchParams.set('redirect_uri', REDIRECT_URI);
-            window.location.href = url.toString();
-        }
+        // クッキーではなく、URLでトークンを受け取るため、redirect_uriを動的に構築
+        const url = new URL('https://pretix.eu/pyconjp/oauth2/v1/authorize');
+        url.searchParams.set('client_id', CLIENT_ID);
+        url.searchParams.set('response_type', 'token'); // codeからtokenに変更
+        url.searchParams.set('scope', 'openid profile email');
+        url.searchParams.set('redirect_uri', 'http://localhost:8000/callback'); // 明示的に記載
+        window.location.href = url.toString();
     });
 
     if (token) {
