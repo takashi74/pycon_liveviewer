@@ -33,10 +33,9 @@
 const CLIENT_ID = "i0VwMUzGedRaeEq1OVFZ7ez9XGnKeptlTOEK5Nlr";
 const REDIRECT_URI = "https://auth.streamtech.cloud/callback";
 
-// URLからis_debugとトークンを取得
+// URLからis_debugを取得し、グローバル変数として定義
 const urlParams = new URLSearchParams(window.location.search);
 const is_debug = urlParams.get('is_debug') === '1';
-let token = urlParams.get('token'); // グローバルスコープで定義
 
 /**
  * JWTをデコードしてペイロードを取得します。
@@ -133,17 +132,11 @@ function createTrack(trackId, title) {
     btn.disabled = true;
 
     btn.addEventListener('click', async () => {
-        // トークンの有無のみをチェック
-        if (!token) {
-            alert("再生権限がありません。視聴権利を取得してください。");
-            return;
-        }
-
         try {
             btn.disabled = true;
             btn.textContent = '再生準備中...';
 
-            let sessionUrl = `https://auth.streamtech.cloud/verify?token=${token}&stream_id=${trackId}`;
+            let sessionUrl = `https://auth.streamtech.cloud/session?stream_id=${trackId}`;
             if (is_debug) {
                 sessionUrl += "&is_debug=1";
             }
@@ -194,8 +187,9 @@ window.onload = () => {
         window.location.href = url.toString();
     });
 
-    if (token) {
-        const payload = decodeJwt(token);
+    const urlToken = urlParams.get('token');
+    if (urlToken) {
+        const payload = decodeJwt(urlToken);
         if (payload && payload.has_ticket) {
             enablePlayButtons();
         }
