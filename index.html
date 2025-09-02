@@ -13,29 +13,23 @@
   body { font-family: 'IBM Plex Sans JP', sans-serif; }
 </style>
 </head>
-<body class="bg-slate-900 text-slate-50 min-h-screen flex flex-col">
+<body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col">
 
-<header class="bg-slate-800 text-white p-4 flex flex-col sm:flex-row justify-between items-center shadow-lg">
+<header class="bg-white text-slate-900 p-4 flex flex-col sm:flex-row justify-between items-center shadow-2xl">
     <h1 class="text-xl sm:text-2xl font-bold mb-2 sm:mb-0">PyCon JP 2025 Live</h1>
     <div class="flex space-x-2">
-        <a id="purchase-btn" href="https://pretix.eu/pyconjp/2025/" class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 bg-orange-600 hover:bg-orange-700 text-white" target="_blank">視聴チケット購入</a>
-        <button id="get-rights-btn" class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 bg-slate-700 hover:bg-slate-600 text-slate-200">視聴権利の取得</button>
+        <a id="purchase-btn" href="https://pretix.eu/pyconjp/2025/" class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 bg-orange-500 hover:bg-orange-600 text-white" target="_blank">視聴チケット購入</a>
+        <button id="get-rights-btn" class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 bg-gray-200 hover:bg-gray-300 text-slate-800">視聴権利の取得</button>
     </div>
 </header>
 
-<main class="p-4 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+<main class="p-4 grid gap-6 grid-cols-1 sm:grid-cols-2">
     <!-- プレイヤーはここに動的生成 -->
 </main>
 
 <script>
 const CLIENT_ID = "i0VwMUzGedRaeEq1OVFZ7ez9XGnKeptlTOEK5Nlr";
 const REDIRECT_URI = "https://auth.streamtech.cloud/callback";
-
-// Safari 判定
-function isSafari() {
-    const ua = navigator.userAgent;
-    return /Safari/.test(ua) && !/Chrome/.test(ua);
-}
 
 // URLパラメータからトークンとis_debugを取得
 const urlParams = new URLSearchParams(window.location.search);
@@ -76,28 +70,32 @@ function setVideoSource(video, url) {
 /**
  * ボタン有効化
  */
-function enablePlayButtons() {
+function enablePlayButtons(hasTicket) {
     const purchaseBtn = document.getElementById('purchase-btn');
     const getRightsBtn = document.getElementById('get-rights-btn');
+    
+    // チケットを持っている場合、購入ボタンを非表示にし、取得ボタンのテキストを変更
+    if (hasTicket) {
+        purchaseBtn.style.display = 'none';
+        getRightsBtn.textContent = '再取得';
+        getRightsBtn.classList.remove('bg-gray-200','hover:bg-gray-300','text-slate-800');
+        getRightsBtn.classList.add('bg-orange-500','hover:bg-orange-600','text-white');
+    }
+
     const tracks = [
         {id: '54d5a3f3-08d9-42eb-b047-6f403dda7eb4'},
         {id: 'fc43fba3-9bf5-49b8-a9c2-3174b5d75920'},
         {id: 'c5702855-fe83-49a3-a3eb-ed0e694c739e'},
         {id: '4d0a0296-1b38-4863-8e78-95b201b04418'}
     ];
-
-    purchaseBtn.classList.add('opacity-50','cursor-not-allowed');
-    purchaseBtn.style.pointerEvents = 'none';
-    getRightsBtn.style.display = 'none';
-
     tracks.forEach(track => {
         const videoElement = document.getElementById(track.id);
         if (!videoElement) return;
         const btn = videoElement.nextElementSibling;
         if (btn && btn.tagName==='BUTTON') {
             btn.disabled=false;
-            btn.classList.remove('bg-slate-700','hover:bg-slate-600','text-slate-200');
-            btn.classList.add('bg-orange-600','hover:bg-orange-700','text-white');
+            btn.classList.remove('bg-gray-200','hover:bg-gray-300','text-slate-800');
+            btn.classList.add('bg-orange-500','hover:bg-orange-600','text-white');
         }
     });
 }
@@ -107,10 +105,10 @@ function enablePlayButtons() {
  */
 function createTrack(trackId, title) {
     const container = document.createElement('div');
-    container.className = 'bg-slate-800 p-4 rounded-xl shadow-xl flex flex-col items-center';
+    container.className = 'bg-white p-4 rounded-xl shadow-xl flex flex-col items-center';
 
     const h3 = document.createElement('h3');
-    h3.className = 'text-lg font-semibold mb-3 text-slate-50';
+    h3.className = 'text-lg font-semibold mb-3 text-slate-900';
     h3.textContent = title;
 
     const video = document.createElement('video');
@@ -122,7 +120,7 @@ function createTrack(trackId, title) {
     video.className = 'w-full h-auto rounded-lg shadow-md';
 
     const btn = document.createElement('button');
-    btn.className = 'mt-4 px-6 py-2 rounded-full font-bold transition-all duration-300 transform hover:scale-105 bg-slate-700 hover:bg-slate-600 text-slate-200';
+    btn.className = 'mt-4 px-6 py-2 rounded-full font-bold transition-all duration-300 transform hover:scale-105 bg-gray-200 hover:bg-gray-300 text-slate-800';
     btn.textContent = '視聴開始';
     btn.disabled = true;
 
@@ -134,8 +132,11 @@ function createTrack(trackId, title) {
             let sessionUrl = `https://auth.streamtech.cloud/session?stream_id=${trackId}`;
             if (is_debug) sessionUrl += "&is_debug=1";
 
-            const fetchOptions = { credentials: 'include' };
-            if (isSafari() && token) {
+            const fetchOptions = {
+                credentials: 'include'
+            };
+
+            if (token) {
                 fetchOptions.headers = { 'Authorization': `Bearer ${token}` };
             }
 
@@ -162,7 +163,7 @@ function createTrack(trackId, title) {
 // 初期化
 window.onload = () => {
     const getRightsBtn = document.getElementById('get-rights-btn');
-
+    
     const tracks = [
         {id: '54d5a3f3-08d9-42eb-b047-6f403dda7eb4', title: 'Track 1'},
         {id: 'fc43fba3-9bf5-49b8-a9c2-3174b5d75920', title: 'Track 2'},
@@ -183,7 +184,7 @@ window.onload = () => {
 
     if (token) {
         const payload = decodeJwt(token);
-        if (payload && payload.has_ticket) enablePlayButtons();
+        if (payload && payload.has_ticket) enablePlayButtons(true); // 引数を渡すように修正
     }
 };
 </script>
